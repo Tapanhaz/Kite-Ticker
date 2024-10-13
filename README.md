@@ -14,7 +14,8 @@ pip install uvloop
 ```
 
 #Example ::
-```
+===================
+```python
 import time
 import asyncio
 import logging
@@ -60,6 +61,9 @@ async def main(ticker, instruments):
                 )
     #Wait for connection to establish
     await ticker.IS_CONNECTED.wait()
+    #We can check round trip time to server
+    #It will return a list 
+    await ticker.check_round_trip_time(count= 6)
     # Modes are MODE.LTP, MODE.QUOTE and MODE.FULL 
     await ticker.subscribe(instruments, MODE.FULL)
     #Sample unsubscribe
@@ -86,6 +90,10 @@ if __name__ == "__main__":
     ]
 
     loop = asyncio.get_event_loop()
+    #KiteTicker have  optional parameters
+    #ws_endpoint -> default is wss://ws.kite.trade
+    #Bool web -> default False
+    #user_id -> default None
     ticker = KiteTicker(
                 api_key= api_key, 
                 access_token = access_token,

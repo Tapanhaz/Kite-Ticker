@@ -16,6 +16,7 @@ cimport cython
 import logging
 import asyncio
 from functools import wraps
+from urllib.parse import quote
 from libc.stdint cimport int32_t
 from picows.picows cimport WSFrame, WSTransport, WSListener
 from picows import ws_connect, WSMsgType, WSCloseCode, WSError
@@ -50,7 +51,9 @@ cdef class KiteTicker:
         str _ws_endpoint
         str _api_key
         str _access_token
-        str _ws_url        
+        str _ws_url    
+        bint _web
+        str _user_id    
         bint _disconnect_socket
         object _loop
         set _ltp_mode_tokens
@@ -71,13 +74,17 @@ cdef class KiteTicker:
                 str api_key,
                 str access_token,
                 object loop,
-                str ws_endpoint= "wss://ws.kite.trade/"
+                str ws_endpoint= "wss://ws.kite.trade/",
+                bint web= False,
+                str user_id= None
             ):
         self._transport = None
         self._api_key = api_key
         self._access_token = access_token
         self._ws_endpoint = ws_endpoint
         self._loop = loop
+        self._web = web
+        self._user_id = user_id
 
         self.IS_CONNECTED = asyncio.Event()
         self._stop_event = asyncio.Event()
@@ -116,8 +123,10 @@ cdef class KiteTicker:
         return orjson.dumps(msg)
     
     cdef str create_url(self):
-        cdef str uri = self._ws_endpoint + "?api_key=" + self._api_key + "&access_token=" + self._access_token
-        return uri
+        cdef str base_uri = self._ws_endpoint + "?api_key=" + self._api_key
+        if self._web:
+            return base_uri + "&enctoken=" + quote(self._access_token) + "&user_id" + self._user_id
+        return base_uri + "&access_token=" + self._access_token
     
     async def stop_signal_handler(self, *args, **kwargs)-> None:
         logger.info(f"WebSocket closure initiated by user interrupt.")
@@ -134,7 +143,7 @@ cdef class KiteTicker:
                                 lambda: asyncio.create_task(self.stop_signal_handler())
                                 )
 
-    async def check_round_trip_time(self, count: int= 5):
+    async def check_round_trip_time(self, count: int= 5)-> list:
         rtts: list = await self._transport.measure_roundtrip_time(count)
         return rtts 
     
@@ -162,8 +171,7 @@ cdef class KiteTicker:
     
     cdef void _on_data_callback(self, bytes msg):
         cdef list message = KiteMessageDecoder.parse_binary(msg)
-        if self._subscribe_callback:
-            self._loop.create_task(self._subscribe_callback(message))
+        self._loop.create_task(self._subscribe_callback(message))
     
     cdef void __store_tokens(self, list instruments, str mode):
         if mode == MODE.LTP:
@@ -233,7 +241,7 @@ cdef class KiteTicker:
                                 auto_ping_idle_timeout= 3,
                                 auto_ping_reply_timeout= 2    
                                 )
-            
+            await client.transport.wait_disconnected()            
         except (socket.gaierror, OSError, WSError) as e:
             logger.error(f"Error occured on connect :: {e}")            
             if reconnect:

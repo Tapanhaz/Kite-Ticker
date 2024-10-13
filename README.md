@@ -4,7 +4,7 @@ Cython websocket client for zerodha based on picows : https://github.com/tarasko
 N.B. -> NOT TESTED IN LIVE MARKET. I will remove this note after testing....
 
 N.B. -> I chooses to keep "exchange_timestamp" as it is (unix timestamp, not converted to datetime)\
-        I think that will be more efficient.
+        I think that will be more efficient. If needed, One can change that to datetime inside class KiteMessageDecoder.
 
 For running in windows install winloop ::
 
@@ -68,7 +68,8 @@ async def main(ticker, instruments):
     await ticker.IS_CONNECTED.wait()
     #We can check round trip time to server
     #It will return a list 
-    await ticker.check_round_trip_time(count= 6)
+    round_trip= await ticker.check_round_trip_time(count= 6)
+    print(round_trip)
     # Modes are MODE.LTP, MODE.QUOTE and MODE.FULL 
     await ticker.subscribe(instruments, MODE.FULL)
     #Sample unsubscribe
@@ -138,5 +139,5 @@ Linux ::
 python3 setup.py build_ext --inplace
 ```
 
-N.B. - I will upload prebuilt extension modules in recent upcoming days
+N.B. - I will upload prebuilt extension modules for some python versions in few days
 

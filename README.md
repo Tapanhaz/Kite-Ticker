@@ -1,5 +1,5 @@
 # Kite-Ticker
-Cython websocket client for zerodha based on picows : https://github.com/tarasko/picows  
+Cython based unofficial async python websocket client for zerodha based on picows  : https://github.com/tarasko/picows  
 
 N.B. -> I chooses to keep "exchange_timestamp" as it is (unix timestamp, not converted to datetime)\
         I think that will be more efficient. If needed, One can change that to datetime inside class KiteMessageDecoder.

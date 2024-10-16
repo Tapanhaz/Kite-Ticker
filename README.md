@@ -1,8 +1,6 @@
 # Kite-Ticker
 Cython websocket client for zerodha based on picows : https://github.com/tarasko/picows  
 
-N.B. -> NOT TESTED IN LIVE MARKET. I will remove this note after testing....
-
 N.B. -> I chooses to keep "exchange_timestamp" as it is (unix timestamp, not converted to datetime)\
         I think that will be more efficient. If needed, One can change that to datetime inside class KiteMessageDecoder.
 
@@ -139,5 +137,5 @@ Linux ::
 python3 setup.py build_ext --inplace
 ```
 
-N.B. - I will upload prebuilt extension modules for some python versions in few days
+N.B. - Prebuilt extension modules are added for win/ linux 3.11 and 3.12.
 
